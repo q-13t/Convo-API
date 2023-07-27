@@ -40,6 +40,21 @@ public class ConversionController {
         }
     };
 
+    private static final HashMap<String, Double> areaConversionRate = new HashMap<String, Double>() {
+        {
+            put("millimeter", 0.000001d);
+            put("centimeter", 0.0001d);
+            put("meter", 1d);
+            put("acre", 4046.8564224d);
+            put("hectare", 10000d);
+            put("kilometer", 1000000d);
+            put("inch", 0.00064516d);
+            put("feet", 0.09290304d);
+            put("yard", 0.83612736d);
+            put("mile", 2589988.110336d);
+        }
+    };
+
     @RequestMapping("/")
     String hello() {
         return "Hello World!";
@@ -211,4 +226,51 @@ public class ConversionController {
         return response;
     }
 
+    /**
+     * Converts 10 units to one another using {@code meter}s as base conversion
+     * rate.
+     * </p>
+     * Available units are:
+     * <ul>
+     * <li>Millimeter</li>
+     * <li>Centimeter</li>
+     * <li>Meter</li>
+     * <li>Acre</li>
+     * <li>Hectare</li>
+     * <li>Kilometer</li>
+     * <li>Inch</li>
+     * <li>Feet</li>
+     * <li>Yard</li>
+     * <li>Mile</li>
+     * </ul>
+     * 
+     * @param from  String containing {@code from} which unit conversion is.
+     * @param to    String containing {@code to} which unit conversion is.
+     * @param value to convert.
+     * @return JSON object containing result of calculation.
+     * @see #areaConversionRate
+     */
+    @RequestMapping(value = "/area", method = RequestMethod.GET)
+    JsonObject areaConverter(
+            @RequestParam(value = "from") String from,
+            @RequestParam(value = "to") String to,
+            @RequestParam(value = "value") double value) {
+        from = from.toLowerCase();
+        to = to.toLowerCase();
+        JsonObject response = new JsonObject();
+        try {
+            if (from.isEmpty())
+                from = "meter";
+            if (to.isEmpty())
+                to = "meter";
+            double convertedValue = value * (areaConversionRate.get(from) / areaConversionRate.get(to));
+            response.addProperty("result", convertedValue);
+            logger.info("SUCCESS: converted area : [ " + from + " , " + to + " , " + value + " -> " + convertedValue
+                    + "]");
+        } catch (Exception e) {
+            logger.error("ERROR in area conversion: [ " + from + " , " + to + " , " + value + " ]", e.getCause());
+            response.addProperty("result", "ERROR");
+        }
+        return response;
+    }
 }
