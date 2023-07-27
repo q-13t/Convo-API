@@ -79,8 +79,8 @@ public class ConversionController {
      * <li>Mile</li>
      * </ul>
      * 
-     * @param from  String containing from which unit conversion is.
-     * @param to    String containing to which unit conversion is.
+     * @param from  String containing {@code from} which unit conversion is.
+     * @param to    String containing {@code to} which unit conversion is.
      * @param value to convert.
      * @return JSON object containing result of calculation.
      * @see #lengthConversionRate
@@ -90,6 +90,8 @@ public class ConversionController {
             @RequestParam(value = "from") String from,
             @RequestParam(value = "to") String to,
             @RequestParam(value = "value") double value) {
+        from = from.toLowerCase();
+        to = to.toLowerCase();
         JsonObject response = new JsonObject();
         try {
             if (from.isEmpty())
@@ -102,7 +104,7 @@ public class ConversionController {
             logger.info("SUCCESS: converted length : [ " + from + " , " + to + " , " + value + " -> " + convertedValue
                     + "]");
         } catch (Exception e) {
-            logger.error("ERROR in length conversion: [ " + from + " , " + to + " , " + value + " ]", e);
+            logger.error("ERROR in length conversion: [ " + from + " , " + to + " , " + value + " ]", e.getCause());
             response.addProperty("result", "ERROR");
         }
         return response;
@@ -122,8 +124,8 @@ public class ConversionController {
      * <li>Pound</li>
      * </ul>
      * 
-     * @param from  String containing from which unit conversion is.
-     * @param to    String containing to which unit conversion is.
+     * @param from  String containing {@code from} which unit conversion is.
+     * @param to    String containing {@code to} which unit conversion is.
      * @param value to convert.
      * @return JSON object containing result of calculation.
      * @see #weightConversionRate
@@ -133,6 +135,8 @@ public class ConversionController {
             @RequestParam(value = "from") String from,
             @RequestParam(value = "to") String to,
             @RequestParam(value = "value") double value) {
+        from = from.toLowerCase();
+        to = to.toLowerCase();
         JsonObject response = new JsonObject();
         try {
             if (from.isEmpty())
@@ -144,9 +148,67 @@ public class ConversionController {
             logger.info("SUCCESS: converted weight : [ " + from + " , " + to + " , " + value + " -> " + convertedValue
                     + "]");
         } catch (Exception e) {
-            logger.error("ERROR in weight conversion: [ " + from + " , " + to + " , " + value + " ]", e);
+            logger.error("ERROR in weight conversion: [ " + from + " , " + to + " , " + value + " ]", e.getCause());
             response.addProperty("result", "ERROR");
         }
         return response;
     }
+
+    /**
+     * Converts 3 units to one another .
+     * </p>
+     * Available units are:
+     * <ul>
+     * <li>Kelvin</li>
+     * <li>Fahrenheit</li>
+     * <li>Celsius</li>
+     * </ul>
+     * 
+     * @param from  String containing {@code from} which unit conversion is.
+     * @param to    String containing {@code to} which unit conversion is.
+     * @param value to convert.
+     * @return JSON object containing result of calculation.
+     * @see #weightConversionRate
+     */
+    @RequestMapping(value = "/temperature")
+    JsonObject temperatureConverter(
+            @RequestParam(value = "from") String from,
+            @RequestParam(value = "to") String to,
+            @RequestParam(value = "value") double value) {
+        from = from.toLowerCase();
+        to = to.toLowerCase();
+        JsonObject response = new JsonObject();
+        try {
+            if (from.isEmpty())
+                from = "kelvin";
+            if (to.isEmpty())
+                to = "kelvin";
+            double convertedValue = 0;
+            if (from.equals(to)) {
+                convertedValue = value;
+            } else if (from.equals("fahrenheit") && to.equals("celsius")) { // fahrenheit -> celsius
+                convertedValue = (value - 32) * (5 / 9);
+            } else if (from.equals("fahrenheit") && to.equals("kelvin")) { // fahrenheit -> kelvin
+                convertedValue = (value + 459.67) * (5 / 9);
+            } else if (from.equals("celsius") && to.equals("fahrenheit")) {// celsius -> fahrenheit
+                convertedValue = value * 9 / 5 + 32;
+            } else if (from.equals("celsius") && to.equals("kelvin")) {// celsius -> kelvin
+                convertedValue = value + 273.15;
+            } else if (from.equals("kelvin") && to.equals("celsius")) {// kelvin -> celsius
+                convertedValue = value - 273.15;
+            } else if (from.equals("kelvin") && to.equals("fahrenheit")) {// kelvin -> fahrenheit
+                convertedValue = (value * 9 / 5) - 459.67;
+            }
+            response.addProperty("result", convertedValue);
+            logger.info(
+                    "SUCCESS: converted temperature : [ " + from + " , " + to + " , " + value + " -> " + convertedValue
+                            + "]");
+        } catch (Exception e) {
+            logger.error("ERROR in temperature conversion: [ " + from + " , " + to + " , " + value + " ]",
+                    e.getCause());
+            response.addProperty("result", "ERROR");
+        }
+        return response;
+    }
+
 }
