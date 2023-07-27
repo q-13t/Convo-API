@@ -55,6 +55,18 @@ public class ConversionController {
         }
     };
 
+    private static final HashMap<String, Double> speedConversionRate = new HashMap<String, Double>() {
+        {
+            put("cps", 0.01d);
+            put("mps", 1d);
+            put("kph", 0.2777777778d);
+            put("fps", 0.3048d);
+            put("mph", 0.44704d);
+            put("k", 0.5144444444d);
+            put("m", 295.0464000003d);
+        }
+    };
+
     @RequestMapping("/")
     String hello() {
         return "Hello World!";
@@ -116,7 +128,7 @@ public class ConversionController {
 
             double convertedValue = value * (lengthConversionRate.get(from) / lengthConversionRate.get(to));
             response.addProperty("result", convertedValue);
-            logger.info("SUCCESS: converted length : [ " + from + " , " + to + " , " + value + " -> " + convertedValue
+            logger.info("SUCCESS: converted length: [ " + from + " , " + to + " , " + value + " -> " + convertedValue
                     + "]");
         } catch (Exception e) {
             logger.error("ERROR in length conversion: [ " + from + " , " + to + " , " + value + " ]", e.getCause());
@@ -160,7 +172,7 @@ public class ConversionController {
                 to = "kilogram";
             double convertedValue = value * (weightConversionRate.get(from) / weightConversionRate.get(to));
             response.addProperty("result", convertedValue);
-            logger.info("SUCCESS: converted weight : [ " + from + " , " + to + " , " + value + " -> " + convertedValue
+            logger.info("SUCCESS: converted weight: [ " + from + " , " + to + " , " + value + " -> " + convertedValue
                     + "]");
         } catch (Exception e) {
             logger.error("ERROR in weight conversion: [ " + from + " , " + to + " , " + value + " ]", e.getCause());
@@ -216,7 +228,7 @@ public class ConversionController {
             }
             response.addProperty("result", convertedValue);
             logger.info(
-                    "SUCCESS: converted temperature : [ " + from + " , " + to + " , " + value + " -> " + convertedValue
+                    "SUCCESS: converted temperature: [ " + from + " , " + to + " , " + value + " -> " + convertedValue
                             + "]");
         } catch (Exception e) {
             logger.error("ERROR in temperature conversion: [ " + from + " , " + to + " , " + value + " ]",
@@ -265,10 +277,55 @@ public class ConversionController {
                 to = "meter";
             double convertedValue = value * (areaConversionRate.get(from) / areaConversionRate.get(to));
             response.addProperty("result", convertedValue);
-            logger.info("SUCCESS: converted area : [ " + from + " , " + to + " , " + value + " -> " + convertedValue
+            logger.info("SUCCESS: converted area: [ " + from + " , " + to + " , " + value + " -> " + convertedValue
                     + "]");
         } catch (Exception e) {
             logger.error("ERROR in area conversion: [ " + from + " , " + to + " , " + value + " ]", e.getCause());
+            response.addProperty("result", "ERROR");
+        }
+        return response;
+    }
+
+    /**
+     * Converts 7 units to one another using {@code meters per second} as base
+     * conversion rate.
+     * </p>
+     * Available units are:
+     * <ul>
+     * <li>Meters Per Second</li>
+     * <li>Centimeters Per Second</li>
+     * <li>Kilometers Per Hour</li>
+     * <li>Feet Per Second</li>
+     * <li>Miles Per Hour</li>
+     * <li>Knots</li>
+     * <li>Mach (SI standard)</li>
+     * </ul>
+     * 
+     * @param from  String containing {@code from} which unit conversion is.
+     * @param to    String containing {@code to} which unit conversion is.
+     * @param value to convert.
+     * @return JSON object containing result of calculation.
+     * @see #areaConversionRate
+     */
+    @RequestMapping(value = "/speed", method = RequestMethod.GET)
+    JsonObject speedConverter(
+            @RequestParam(value = "from") String from,
+            @RequestParam(value = "to") String to,
+            @RequestParam(value = "value") double value) {
+        from = from.toLowerCase();
+        to = to.toLowerCase();
+        JsonObject response = new JsonObject();
+        try {
+            if (from.isEmpty())
+                from = "mps";
+            if (to.isEmpty())
+                to = "mps";
+            double convertedValue = value * (speedConversionRate.get(from) / speedConversionRate.get(to));
+            response.addProperty("result", convertedValue);
+            logger.info("SUCCESS: converted speed: [ " + from + " , " + to + " , " + value + " -> " + convertedValue
+                    + "]");
+        } catch (Exception e) {
+            logger.error("ERROR in speed conversion: [ " + from + " , " + to + " , " + value + " ]", e.getCause());
             response.addProperty("result", "ERROR");
         }
         return response;
